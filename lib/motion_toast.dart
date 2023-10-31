@@ -479,16 +479,18 @@ class MotionToast extends StatefulWidget {
   /// Display the created motion toast based on the [position] attribute
   /// [context]: the actual context of the application
   void show(BuildContext context) {
-    _context = context;
-    Navigator.of(context).push(
-      PageRouteBuilder<Widget>(
-        fullscreenDialog: false,
-        barrierColor: barrierColor,
-        pageBuilder: (BuildContext context, _, __) => this,
-        opaque: false,
-        barrierDismissible: dismissable,
-      ),
-    );
+    if (context.mounted) {
+      _context = context;
+      Navigator.of(context).push(
+        PageRouteBuilder<Widget>(
+          fullscreenDialog: false,
+          barrierColor: barrierColor,
+          pageBuilder: (BuildContext context, _, __) => this,
+          opaque: false,
+          barrierDismissible: dismissable,
+        ),
+      );
+    }
   }
 
   void dismiss() {
@@ -503,15 +505,11 @@ class _MotionToastState extends State<MotionToast>
     with TickerProviderStateMixin {
   late Animation<Offset> offsetAnimation;
   late AnimationController slideController;
-  late AnimationController animationController;
   late Timer toastTimer;
 
-  void _popCurrentToast() {
+  void _popCurrentToast() async {
     if (mounted) {
-      _closeAnimation().then((value) {
-        Navigator.of(context).pop();
-        widget.onClose?.call();
-      });
+      await _closeAnimation();
     }
   }
 
@@ -526,13 +524,13 @@ class _MotionToastState extends State<MotionToast>
   }
 
   Future<void> _closeAnimation() async {
-    animationController = AnimationController(
+    slideController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 800),
     );
     var curveAnimation = CurvedAnimation(
-      parent: animationController,
-      curve: widget.animationCurve,
+      parent: slideController,
+      curve: Curves.ease,
     );
     debugPrint('widget.closeAnimationType ${widget.closeAnimationType}');
     switch (widget.closeAnimationType) {
@@ -627,7 +625,12 @@ class _MotionToastState extends State<MotionToast>
       default:
         break;
     }
-    await animationController.forward();
+
+    await slideController.forward();
+    if (context.mounted) {
+      Navigator.of(context).maybePop();
+      widget.onClose?.call();
+    }
   }
 
   void _initializeAnimation() {
@@ -768,9 +771,10 @@ class _MotionToastState extends State<MotionToast>
 
   @override
   void dispose() {
-    slideController.dispose();
-    animationController.dispose();
-    toastTimer.cancel();
+    debugPrint('slideController dispose');
+
     super.dispose();
+    slideController.dispose();
+    toastTimer.cancel();
   }
 }
