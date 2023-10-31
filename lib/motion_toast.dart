@@ -626,7 +626,11 @@ class _MotionToastState extends State<MotionToast>
         break;
     }
 
-    await slideController.forward();
+    T? ambiguate<T>(T? value) => value;
+
+    ambiguate(WidgetsBinding.instance)?.addPostFrameCallback(
+      (_) => slideController.forward(),
+    );
     if (context.mounted) {
       Navigator.of(context).maybePop();
       widget.onClose?.call();
@@ -772,9 +776,8 @@ class _MotionToastState extends State<MotionToast>
   @override
   void dispose() {
     debugPrint('slideController dispose');
-
-    super.dispose();
     slideController.dispose();
     toastTimer.cancel();
+    super.dispose();
   }
 }
