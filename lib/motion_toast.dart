@@ -524,10 +524,7 @@ class _MotionToastState extends State<MotionToast>
   }
 
   Future<void> _closeAnimation() async {
-    slideController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 800),
-    );
+  
     var curveAnimation = CurvedAnimation(
       parent: slideController,
       curve: Curves.ease,
@@ -629,7 +626,7 @@ class _MotionToastState extends State<MotionToast>
     T? ambiguate<T>(T? value) => value;
 
     ambiguate(WidgetsBinding.instance)?.addPostFrameCallback(
-      (_) => slideController.forward(),
+      (_) => slideController.repeat(),
     );
     if (context.mounted) {
       Navigator.of(context).maybePop();
